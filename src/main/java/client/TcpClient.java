@@ -16,16 +16,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 
-/**
- * Created by dave on 17/05/16.
- */
-public class TcpClient extends AbstractVerticle{
+class TcpClient extends AbstractVerticle{
     private String serverName;
     private int serverPort;
     private NetClient client;
     private Vertx vertx;
 
-    public TcpClient(String serverName, int port) {
+    TcpClient(String serverName, int port) {
         this.serverName = serverName;
         this.serverPort = port;
         this.vertx = Vertx.vertx();
@@ -33,6 +30,10 @@ public class TcpClient extends AbstractVerticle{
 
     @Override
     public void start() throws Exception{
+        if (this.client != null)
+        {
+            this.close();
+        }
         this.client = this.vertx.createNetClient();
     }
 
@@ -44,7 +45,7 @@ public class TcpClient extends AbstractVerticle{
             }
         });
     }
-    public void connect(User user, int times){
+    void connect(User user){
 
         this.client.connect(this.serverPort, this.serverName, result -> {
             NetSocket socket = result.result();
@@ -53,6 +54,7 @@ public class TcpClient extends AbstractVerticle{
             DatumWriter<User> writer = new SpecificDatumWriter<>(User.getClassSchema());
             try {
                 writer.write(user, encoder);
+                System.out.println("Id" + user.getName());
                 encoder.flush();
                 out.close();
                 socket.write(Buffer.buffer(out.toByteArray())).end();
@@ -67,7 +69,7 @@ public class TcpClient extends AbstractVerticle{
         this.client.connect(this.serverPort,this.serverName,connectionHandler);
     }
 
-    public void close(){
+    void close(){
         this.client.close();
         System.out.println("Client closed successfully");
     }
